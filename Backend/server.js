@@ -45,7 +45,7 @@ const template = handlebars.compile(fs.readFileSync(templatePath, 'utf8'));
 
 async function generateBarcode(email) {
     try {
-        const barcodeText = `ELAN_24_${email}`;
+        const barcodeText = `ELAN_24_${email}_GUEST`;
         
         // Generate barcode as PNG buffer
         const png = await new Promise((resolve, reject) => {
@@ -79,7 +79,7 @@ async function sendPass(participant) {
         const barcodeBuffer = await new Promise((resolve, reject) => {
             bwipjs.toBuffer({
                 bcid: 'code128',
-                text: `ELAN_24_${participant.email}`,
+                text: `ELAN_24_${participant.email}_GUEST`,
                 scale: 2,              // Reduced from 3 to 2
                 height: 12,             // Reduced from 10 to 8
                 includetext: true,
@@ -106,7 +106,7 @@ async function sendPass(participant) {
         const htmlContent = template({
             Name: participant.name,
             Pass: participant.passType,
-            ALT: `ELAN_24_${participant.email}`,
+            ALT: `ELAN_24_${participant.email}_GUEST`,
             barcode: 'cid:barcodeImage', // Reference to content ID
             College: participant.college,
             City: participant.city,
@@ -118,7 +118,7 @@ async function sendPass(participant) {
         const mailOptions = {
             from: process.env.EMAIL_USER,
             to: participant.email,
-            subject: 'Booking confirmed | Papon Live at IIT Hyderabad | Elan & nVision Fest Pass - Testing-4',
+            subject: 'Booking confirmed | Papon Live at IIT Hyderabad | Elan & nVision Fest Pass - Testing-5',
             html: htmlContent,
             attachments: [
                 {
