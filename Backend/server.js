@@ -80,12 +80,12 @@ async function sendPass(participant) {
             bwipjs.toBuffer({
                 bcid: 'code128',
                 text: `ELAN_24_${participant.email}`,
-                scale: 3,
-                height: 10,
+                scale: 2,              // Reduced from 3 to 2
+                height: 12,             // Reduced from 10 to 8
                 includetext: true,
                 textxalign: 'center',
-                backgroundcolor: 'FFFFFF', // Add white background
-                padding: 10 // Add some padding around the barcode
+                backgroundcolor: 'FFFFFF',
+                padding: 10
             }, function (err, png) {
                 if (err) reject(err);
                 else resolve(png);
@@ -118,7 +118,7 @@ async function sendPass(participant) {
         const mailOptions = {
             from: process.env.EMAIL_USER,
             to: participant.email,
-            subject: 'Booking confirmed | Papon Live at IIT Hyderabad | Elan & nVision Fest Pass',
+            subject: 'Booking confirmed | Papon Live at IIT Hyderabad | Elan & nVision Fest Pass - Testing-3',
             html: htmlContent,
             attachments: [
                 {
