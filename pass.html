@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your Elan & nVision 2025 pass</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&display=swap" rel="stylesheet">
+</head>
+
+<body style="font-family: 'JetBrains Mono', monospace; font-weight: 300; background-color: #242424; margin: 0; padding: 0;">
+    <div
+        style="max-width: 600px; background: #070707; margin: 20px auto; border-radius: 8px; box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);">
+        {{#if headerImage}}
+            <img src="{{headerImage}}" alt="Elan & nVision 2025" style="width: 100%; border-radius: 8px 8px 0 0;">
+        {{else}}
+            <div style="width: 100%; height: 200px; background: linear-gradient(45deg, #EB4B9B, #070707); border-radius: 8px 8px 0 0; display: flex; justify-content: center; align-items: center;">
+                <h1 style="color: #ffffff; font-size: 24px; text-align: center;">Elan & nVision 2025</h1>
+            </div>
+        {{/if}}
+        <div style="font-size: 16px; color: #e6e6e6; margin: 15px;">Dear {{Name}},</div>
+        <div style="font-size: 16px; color: #e6e6e6; margin: 0 15px;">
+            Thank you for registering for Elan & nVision 2025! We are excited to have you join us for IIT Hyderabad's
+            premier techno-cultural fest.
+        </div>
+
+        <div style="font-size: 16px; color: #e6e6e6; margin: 15px 15px;">
+            Get ready for an unforgettable experience filled with exciting events, workshops, and performances that
+            inspire creativity and innovation!
+        </div>
+
+        <div style="font-size: 16px; color: #e6e6e6; margin: 15px 15px;">
+            Please use the barcode below for entry and exit at the main entrance:
+        </div>
+
+        <div style="margin-top: 20px; margin-left: 20px; font-size: 16px; color: #EB4B9B;">
+            <strong style="font-size: 16px;">Your Elan & nVision 2025 Pass</strong>
+            <br />
+            <div style="margin-left: 16px; color: #e6e6e6;">
+                <strong>Name:</strong>
+                <span>{{Name}}</span>
+                <br />
+                <strong>College:</strong>
+                <span>{{College}}</span>
+                <br />
+                <strong>City:</strong>
+                <span>{{City}}</span>
+            </div>
+            <br />
+            <div>
+                <img src="{{barcode}}" alt="{{ALT}}" style="display: block; width: 300px; margin: 0 auto; background: white; padding: 10px; border-radius: 4px;">
+            </div>
+        </div>
+
+        <br />
+        <a href="https://www.elan.org.in/schedule" style="color: #EB4B9B; margin: 20px; font-weight: bold; font-size: 18px; text-decoration: none">Click here to view schedule</a> 
+
+        <div style="margin-top: 20px; margin-left: 20px; font-size: 16px; color: #e6e6e6;">
+            <strong style="font-size: 20px;">What's Next?</strong>
+            <ul>
+                <li>Accomodation booking link: 
+                    <a href="https://pages.razorpay.com/pl_Pt37mNvj2k0ByX/view" target="_blank" style="color: #EB4B9B; font-weight: bold;">Accomodation</a>
+                </li>
+                <li>Competitions link: 
+                    <a href="https://www.elan.org.in/competitions" target="_blank" style="color: #EB4B9B; font-weight: bold;">Competitions</a>
+                </li>
+            </ul>
+        </div>
+        <div style="font-size: 16px; color: #e6e6e6; margin: 15px 15px;">
+            For real-time updates, and important announcements, follow us on 
+            <a href="https://www.instagram.com/elan_nvision.iith/?hl=en" target="_blank" style="text-decoration: underline; color: #e6e6e6; font-weight: 800;">Instagram</a>
+            . Don't miss out on the contest announcements, and exciting surprises!
+        </div>
+        <div style="font-size: 16px; color: #e6e6e6; margin: 15px 15px;">
+            We look forward to welcoming you to our campus! Together, let's make this festival an unforgettable experience.
+        </div>
+        
+        <div style="padding: 0 20px 20px 20px; font-size: 16px; color: #e6e6e6;">
+            <br><br>
+            <strong>Best regards,</strong><br>
+            <strong>Elan & nVision, IIT Hyderabad</strong>
+        </div>
+    </div>
+</body>
+
+</html>
