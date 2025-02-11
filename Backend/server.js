@@ -3,7 +3,6 @@ const nodemailer = require('nodemailer');
 const fs = require('fs');
 const path = require('path');
 const handlebars = require('handlebars');
-const puppeteer = require('puppeteer');
 const bwipjs = require('bwip-js');
 const axios = require('axios');
 require('dotenv').config();
@@ -74,96 +73,70 @@ async function generateBarcode(email) {
     }
 }
 
-async function generatePDF(htmlContent) {
-    const browser = await puppeteer.launch({ 
-        headless: 'new',
-        args: ['--no-sandbox', '--disable-setuid-sandbox']
-    });
-    const page = await browser.newPage();
-    
-    // Adjusted viewport size for single page
-    await page.setViewport({
-        width: 800,
-        height: 1000,  // Reduced height
-        deviceScaleFactor: 1,
-    });
-    
-    await page.setContent(htmlContent);
-    
-    const pdf = await page.pdf({
-        format: 'A4',
-        printBackground: true,
-        margin: {
-            top: '15px',    // Reduced margins
-            right: '15px',
-            bottom: '15px',
-            left: '15px'
-        },
-        preferCSSPageSize: true,
-        scale: 0.9         // Slightly scale down content
-    });
-    
-    await browser.close();
-    return pdf;
-}
-
 async function sendPass(participant) {
     try {
-        const barcodeDataUrl = await generateBarcode(participant.email);
-        
-        // Read the header image with error handling
-        let headerBase64;
+        // Generate barcode
+        const barcodeBuffer = await new Promise((resolve, reject) => {
+            bwipjs.toBuffer({
+                bcid: 'code128',
+                text: `ELAN_24_${participant.email}`,
+                scale: 3,
+                height: 10,
+                includetext: true,
+                textxalign: 'center',
+                backgroundcolor: 'FFFFFF', // Add white background
+                padding: 10 // Add some padding around the barcode
+            }, function (err, png) {
+                if (err) reject(err);
+                else resolve(png);
+            });
+        });
+
+        // Read header image
+        let headerBuffer;
         try {
-            // Update the path to be relative to the project root
-            const headerImagePath = path.join(__dirname, '..', 'header.png');  // Changed from 'assets/header.png'
-            const headerImage = fs.readFileSync(headerImagePath);
-            headerBase64 = `data:image/png;base64,${headerImage.toString('base64')}`;
-            console.log('Header image loaded successfully');
+            const headerImagePath = path.join(__dirname, '..', 'header.png');
+            headerBuffer = fs.readFileSync(headerImagePath);
         } catch (error) {
-            console.warn('Header image not found at path:', path.join(__dirname, '..', 'header.png'));
-            console.warn('Error:', error.message);
-            headerBase64 = null;
+            console.warn('Header image not found:', error.message);
+            headerBuffer = null;
         }
 
-        // Prepare HTML content with header image or fallback
+        // Generate HTML content with CID references
         const htmlContent = template({
             Name: participant.name,
             Pass: participant.passType,
             ALT: `ELAN_24_${participant.email}`,
-            barcode: barcodeDataUrl,
+            barcode: 'cid:barcodeImage', // Reference to content ID
             College: participant.college,
             City: participant.city,
-            headerImage: headerBase64,
-            useHeaderFallback: !headerBase64
+            headerImage: headerBuffer ? 'cid:headerImage' : null, // Reference to content ID
+            useHeaderFallback: !headerBuffer
         });
 
-        // Generate PDF
-        const pdf = await generatePDF(htmlContent);
-
-        // Send email with more personalized content
+        // Configure email with attachments using content IDs
         const mailOptions = {
             from: process.env.EMAIL_USER,
             to: participant.email,
-            subject: 'Your Elan & nVision 2025 Pass',
-            html: `
-                <p>Dear ${participant.name},</p>
-                <p>Thank you for registering for Elan & nVision 2025! Please find your event pass attached to this email.</p>
-                <p>Your Registration Details:</p>
-                <ul>
-                    <li>Name: ${participant.name}</li>
-                    <li>College: ${participant.college}</li>
-                    <li>City: ${participant.city}</li>
-                </ul>
-                <p>Please keep this pass handy during the event.</p>
-                <p>Best regards,<br>Elan & nVision, IIT Hyderabad</p>
-            `,
+            subject: 'Booking confirmed | Papon Live at IIT Hyderabad | Elan & nVision Fest Pass',
+            html: htmlContent,
             attachments: [
                 {
-                    filename: 'Elan-nVision-Pass.pdf',
-                    content: pdf
+                    filename: 'barcode.png',
+                    content: barcodeBuffer,
+                    cid: 'barcodeImage' // Content ID for barcode
                 }
             ]
         };
+
+        // Add header image attachment if available
+        if (headerBuffer) {
+            mailOptions.attachments.push({
+                filename: 'header.png',
+                content: headerBuffer,
+                cid: 'headerImage' // Content ID for header
+            });
+        }
 
         await transporter.sendMail(mailOptions);
         console.log(`Pass sent successfully to ${participant.email}`);
