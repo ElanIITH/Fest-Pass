@@ -10,8 +10,12 @@ require('dotenv').config();
 // Configure Google Sheets API
 const auth = new google.auth.GoogleAuth({
     keyFile: 'elan-pass-mailing-450613-dbf3999bb350.json', // Your Google Cloud service account key
-    scopes: ['https://www.googleapis.com/auth/spreadsheets.readonly'],
+    scopes: ['https://www.googleapis.com/auth/spreadsheets.readonly', 'https://www.googleapis.com/auth/spreadsheets'],
 });
+
+// Add this near the top of your file, after the auth configuration
+const serviceAccountCredentials = require('./elan-pass-mailing-450613-dbf3999bb350.json');
+console.log("Service Account Email:", serviceAccountCredentials.client_email);
 
 // Configure email transporter
 const transporter = nodemailer.createTransport({
@@ -45,15 +49,15 @@ const template = handlebars.compile(fs.readFileSync(templatePath, 'utf8'));
 
 async function generateBarcode(email) {
     try {
-        const barcodeText = `ELAN_24_${email}_GUEST`;
+        const barcodeText = `ELAN_25_${email}_GUEST`;
         
         // Generate barcode as PNG buffer
         const png = await new Promise((resolve, reject) => {
             bwipjs.toBuffer({
                 bcid: 'code128',       // Barcode type
                 text: barcodeText,     // Text to encode
-                scale: 3,              // 3x scaling factor
-                height: 10,            // Bar height, in millimeters
+                scale: 2,              // 3x scaling factor
+                height: 14,            // Bar height, in millimeters
                 includetext: true,     // Show human-readable text
                 textxalign: 'center',  // Center the text
             }, function (err, png) {
@@ -73,15 +77,62 @@ async function generateBarcode(email) {
     }
 }
 
+async function updateAccessSheet(participant) {
+    try {
+        const sheets = google.sheets({ version: 'v4', auth });
+        
+        // Format the data according to the specified structure
+        const barcodeText = `ELAN_25_${participant.email}_GUEST`.toUpperCase();
+        const rowData = [
+            [
+                participant.name,
+                'Elan 2025;https://www.elan.org.in/assets/white%20horizontal-CmMzaxkP.svg',
+                barcodeText,
+                'GUEST',
+                '10-03-2025',
+                participant.email
+            ]
+        ];
+
+        // First verify if we have access to the sheet
+        try {
+            await sheets.spreadsheets.get({
+                spreadsheetId: '1oaAASGUlpfVnAAxcybypnDQRg3m7ZtzUIWyHct38B1g',
+            });
+        } catch (error) {
+            if (error.status === 403) {
+                throw new Error(`Service account does not have access to the spreadsheet. Please share the spreadsheet with the service account email address found in your credentials file.`);
+            }
+            throw error;
+        }
+
+        await sheets.spreadsheets.values.append({
+            spreadsheetId: '1oaAASGUlpfVnAAxcybypnDQRg3m7ZtzUIWyHct38B1g',
+            range: 'Sheet1!A:F',
+            valueInputOption: 'RAW',
+            insertDataOption: 'INSERT_ROWS',
+            resource: {
+                values: rowData,
+            },
+        });
+
+        console.log(`Access sheet updated for ${participant.email}`);
+        return true;
+    } catch (error) {
+        console.error('Error updating access sheet:', error.message);
+        return false;
+    }
+}
+
 async function sendPass(participant) {
     try {
         // Generate barcode
         const barcodeBuffer = await new Promise((resolve, reject) => {
             bwipjs.toBuffer({
                 bcid: 'code128',
-                text: `ELAN_24_${participant.email}_GUEST`,
+                text: `ELAN_25_${participant.email}_GUEST`,
                 scale: 2,              // Reduced from 3 to 2
-                height: 12,             // Reduced from 10 to 8
+                height: 14,             // Reduced from 10 to 8
                 includetext: true,
                 textxalign: 'center',
                 backgroundcolor: 'FFFFFF',
@@ -106,7 +157,7 @@ async function sendPass(participant) {
         const htmlContent = template({
             Name: participant.name,
             Pass: participant.passType,
-            ALT: `ELAN_24_${participant.email}_GUEST`,
+            ALT: `ELAN_25_${participant.email}_GUEST`,
             barcode: 'cid:barcodeImage', // Reference to content ID
             College: participant.college,
             City: participant.city,
@@ -118,7 +169,7 @@ async function sendPass(participant) {
         const mailOptions = {
             from: process.env.EMAIL_USER,
             to: participant.email,
-            subject: 'Booking confirmed | Papon Live at IIT Hyderabad | Elan & nVision Fest Pass - Testing-5',
+            subject: 'Booking confirmed | Papon Live at IIT Hyderabad | Elan & nVision Fest Pass - Testing-8',
             html: htmlContent,
             attachments: [
                 {
@@ -136,10 +187,14 @@ async function sendPass(participant) {
                 content: headerBuffer,
                 cid: 'headerImage' // Content ID for header
             });
-        }
+      }
 
         await transporter.sendMail(mailOptions);
         console.log(`Pass sent successfully to ${participant.email}`);
+        
+        // Add the entry to the access sheet after successful email sending
+        await updateAccessSheet(participant);
+        
         return true;
     } catch (error) {
         console.error(`Error sending pass to ${participant.email}:`, error);
