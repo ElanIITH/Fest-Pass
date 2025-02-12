@@ -169,7 +169,7 @@ async function sendPass(participant) {
         const mailOptions = {
             from: process.env.EMAIL_USER,
             to: participant.email,
-            subject: 'Booking confirmed | Papon Live at IIT Hyderabad | Elan & nVision Fest Pass - Testing-8',
+            subject: 'Booking confirmed | Elan & nVision Fest Pass',
             html: htmlContent,
             attachments: [
                 {
