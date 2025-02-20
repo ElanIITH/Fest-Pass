@@ -245,9 +245,78 @@ async function processRegistrations() {
     }
 }
 
-// Main execution
+// Replace the lastProcessedRow variable declaration with this:
+let lastProcessedRow = 0;
+
+// Add this new function to initialize the last processed row
+async function initializeLastProcessedRow() {
+    try {
+        const sheets = google.sheets({ version: 'v4', auth });
+        const response = await sheets.spreadsheets.values.get({
+            spreadsheetId: '1QRHIHgXVMGebIX_3YeFLE1joCt-HzDO4tADA0SmeEv0',
+            range: 'Sheet1!A2:H',
+        });
+
+        const rows = response.data.values;
+        if (!rows || rows.length === 0) {
+            lastProcessedRow = 0;
+        } else {
+            lastProcessedRow = rows.length;
+            console.log(`Initialized: Will start processing from row ${lastProcessedRow + 2} (skipping ${lastProcessedRow} existing entries)`);
+        }
+    } catch (error) {
+        console.error('Error initializing last processed row:', error);
+        throw error;
+    }
+}
+
+async function checkNewRegistrations() {
+    try {
+        const sheets = google.sheets({ version: 'v4', auth });
+        
+        const response = await sheets.spreadsheets.values.get({
+            spreadsheetId: '1QRHIHgXVMGebIX_3YeFLE1joCt-HzDO4tADA0SmeEv0',
+            range: 'Sheet1!A2:H',
+        });
+
+        const rows = response.data.values;
+        if (!rows || rows.length === 0) {
+            console.log('No data found.');
+            return;
+        }
+
+        // Process only new entries
+        for (let i = lastProcessedRow; i < rows.length; i++) {
+            const row = rows[i];
+            const participant = {
+                timestamp: row[0],
+                name: row[1],
+                phone: row[2],
+                email: row[3],
+                college: row[4],
+                age: row[5],
+                city: row[6],
+                source: row[7],
+                passType: 'General'
+            };
+
+            if (participant.email) {
+                console.log(`Processing new registration for ${participant.name} (${participant.email})`);
+                await sendPass(participant);
+                lastProcessedRow = i + 1;
+                // Add delay to avoid hitting rate limits
+                await new Promise(resolve => setTimeout(resolve, 1000));
+            }
+        }
+
+    } catch (error) {
+        console.error('Error checking new registrations:', error);
+    }
+}
+
+// Modify the main function
 async function main() {
-    console.log('Starting to process registrations...');
+    console.log('Starting automatic email service...');
     
     // Verify email configuration first
     const emailConfigValid = await verifyEmailConfig();
@@ -256,9 +325,17 @@ async function main() {
         return;
     }
     
-    await processRegistrations();
-    console.log('Finished processing registrations.');
+    // Initialize the last processed row to current sheet length
+    await initializeLastProcessedRow();
+    
+    // Set up periodic checking (every 1 minute)
+    const CHECK_INTERVAL = 1 * 60 * 1000;
+    setInterval(async () => {
+        console.log('Checking for new registrations...');
+        await checkNewRegistrations();
+    }, CHECK_INTERVAL);
 }
 
-// Run the script
+// Keep the existing main() call at the bottom
+// Main execution
 main().catch(console.error);
