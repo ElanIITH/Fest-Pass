@@ -208,8 +208,8 @@ async function processRegistrations() {
         
         // Updated range to match your sheet structure
         const response = await sheets.spreadsheets.values.get({
-            spreadsheetId: '1QRHIHgXVMGebIX_3YeFLE1joCt-HzDO4tADA0SmeEv0',
-            range: 'Sheet1!A2:H', // Updated to include all columns
+            spreadsheetId: '1UFSo5HVgpuVFi0gbseCmHNb1sFfdhuJR_EDIewXrPXc',
+            range: 'A2:H', // Simplified range format
         });
 
         const rows = response.data.values;
@@ -253,8 +253,8 @@ async function initializeLastProcessedRow() {
     try {
         const sheets = google.sheets({ version: 'v4', auth });
         const response = await sheets.spreadsheets.values.get({
-            spreadsheetId: '1QRHIHgXVMGebIX_3YeFLE1joCt-HzDO4tADA0SmeEv0',
-            range: 'Sheet1!A2:H',
+            spreadsheetId: '1UFSo5HVgpuVFi0gbseCmHNb1sFfdhuJR_EDIewXrPXc',
+            range: 'A2:H',  // Simplified range format
         });
 
         const rows = response.data.values;
@@ -275,8 +275,8 @@ async function checkNewRegistrations() {
         const sheets = google.sheets({ version: 'v4', auth });
         
         const response = await sheets.spreadsheets.values.get({
-            spreadsheetId: '1QRHIHgXVMGebIX_3YeFLE1joCt-HzDO4tADA0SmeEv0',
-            range: 'Sheet1!A2:H',
+            spreadsheetId: '1UFSo5HVgpuVFi0gbseCmHNb1sFfdhuJR_EDIewXrPXc',
+            range: 'A2:H',  // Simplified range format
         });
 
         const rows = response.data.values;
